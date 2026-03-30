@@ -700,7 +700,7 @@ local function redo2()
 			table.insert(tools,v)
 		end 
 	end
-	for i,v in tools do
+	for i,v in pairs(tools) do
 		pcall(function()
 			v.Parent = c 
 			v.Parent = lp.Backpack
@@ -729,10 +729,10 @@ local function redo2()
 	end)
 	task.spawn(function()
 		task.wait(.01)
-		for i,v in tools do
+		for i,v in pairs(tools) do
 			v.Parent = c
 		end
-		for i,v in tools do
+		for i,v in pairs(tools) do
 			v.Parent = lp.Backpack
 		end
 		c:BreakJoints()
@@ -824,7 +824,7 @@ local function redo2()
 	if OxideSettings.CustomHats == false then
 		connect = game:GetService("RunService").Heartbeat:Connect(function(set)
 			_oxFrame = _oxFrame + 1
-			sine=os.clock
+			sine=os.clock()
 			flingpart = OxideSettings.flingpart
 			pcall(function()
 				if flingpart ~= nil and flingpart.Parent.Parent ~= nil then
@@ -927,7 +927,7 @@ local function redo2()
 		end)
 	else 
 		connect = game:GetService("RunService").Heartbeat:Connect(function(set)
-			sine=os.clock
+			sine=os.clock()
 			flingpart = OxideSettings.flingpart
 			pcall(function()
 				if flingpart ~= nil and flingpart.Parent.Parent ~= nil then
