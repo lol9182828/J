@@ -87,7 +87,7 @@ local flingpos = game:GetService("Players").LocalPlayer:GetMouse().Hit
 local flingpart = game:GetService("Players").LocalPlayer:GetMouse().Target
 local flingplr = nil
 local sineee=os.clock()
-local sine=os.clock()
+local sine=os.clock
 local plr =game:GetService("Players").LocalPlayer
 local lp = plr
 local cf 
@@ -774,13 +774,11 @@ local function redo2()
 			local _s = math.sin(_t*1000)
 			local _c2 = math.cos(_t*1000)
 			for i,v in pairs(c:GetChildren()) do
-				if v:IsA("Accessory") then
-					-- Sin velocity en accesorios: el connect loop los mueve con CFrame cada frame
-					-- Poner velocity 0 evita que la física los jale mientras no están anclados
+				if v:IsA("Accessory") and v:FindFirstChild("Handle") then
 					v.Handle.AssemblyLinearVelocity = Vector3.zero
 					v.Handle.AssemblyAngularVelocity = Vector3.zero
 					v.Handle.CanCollide = false
-				elseif v:IsA("Tool") then
+				elseif v:IsA("Tool") and v:FindFirstChild("Handle") then
 					v.Handle.AssemblyLinearVelocity = Vector3.new(_tv.X*15 - 10*_c2, 28.5312 + _s, _tv.Z*15 + 3*math.sin(_t*12000))
 					v.Handle.AssemblyAngularVelocity = Vector3.new(0, math.sin(_t*10), 0) + _ta * 2
 					v.Handle.CanCollide = false
@@ -790,10 +788,10 @@ local function redo2()
 	else 
 		velocity = game:GetService("RunService").Heartbeat:Connect(function()
 			for i,v in pairs(c:GetChildren()) do
-				if v:IsA("Accessory") then
+				if v:IsA("Accessory") and v:FindFirstChild("Handle") then
 					v.Handle.AssemblyLinearVelocity = Vector3.zero
 					v.Handle.AssemblyAngularVelocity = Vector3.zero
-				elseif v:IsA("Tool") then 
+				elseif v:IsA("Tool") and v:FindFirstChild("Handle") then 
 					if burgermeat == true then
 						pcall(function()
 							v.Handle.AssemblyLinearVelocity = Vector3.new(9e9 -9e7, 9e9) 
@@ -830,7 +828,7 @@ local function redo2()
 	if OxideSettings.CustomHats == false then
 		connect = game:GetService("RunService").Heartbeat:Connect(function(set)
 			_oxFrame = _oxFrame + 1
-			sine=os.clock()
+			sine=os.clock
 			flingpart = OxideSettings.flingpart
 			pcall(function()
 				if flingpart ~= nil and flingpart.Parent.Parent ~= nil then
@@ -873,9 +871,11 @@ local function redo2()
 
 			pcall(function()
 				for _,v in pairs(c:GetChildren()) do
-					if v:IsA("Accessory") and v.Name ~= "gooblet"  and v.Name ~= "fooblet"  and v.Name ~= "BlueRobotArm" and not string.find(v.Name,"Accessory (Noob") and v.Name ~= "Accessory (NoobLeftArm)"  and v.Name ~= "Accessory (NoobTorso)"  and v.Name ~= "Accessory (NoobRightArm)" and v.Name ~= "GreyRobotArm"   and v.Name ~= "Tor" and v.Name ~= "PurpleRobotArm" and v.Name ~= "RobotArmTest"  and v.Name ~= "LARM" and v.Name ~= "RARM" and v.Name ~= "Accessory (rightleg)" and v.Name ~= "Accessory (LLeg)" then  
-						v.Handle.CFrame = char[v.Name].Handle.CFrame +antisleep
-						v.Handle.CanTouch = false
+					if v:IsA("Accessory") and v:FindFirstChild("Handle") and v.Name ~= "gooblet"  and v.Name ~= "fooblet"  and v.Name ~= "BlueRobotArm" and not string.find(v.Name,"Accessory (Noob") and v.Name ~= "Accessory (NoobLeftArm)"  and v.Name ~= "Accessory (NoobTorso)"  and v.Name ~= "Accessory (NoobRightArm)" and v.Name ~= "GreyRobotArm"   and v.Name ~= "Tor" and v.Name ~= "PurpleRobotArm" and v.Name ~= "RobotArmTest"  and v.Name ~= "LARM" and v.Name ~= "RARM" and v.Name ~= "Accessory (rightleg)" and v.Name ~= "Accessory (LLeg)" then  
+						if char:FindFirstChild(v.Name) and char[v.Name]:FindFirstChild("Handle") then
+							v.Handle.CFrame = char[v.Name].Handle.CFrame + antisleep
+							v.Handle.CanTouch = false
+						end
 					end
 				end
 			end)
@@ -933,7 +933,7 @@ local function redo2()
 		end)
 	else 
 		connect = game:GetService("RunService").Heartbeat:Connect(function(set)
-			sine=os.clock()
+			sine=os.clock
 			flingpart = OxideSettings.flingpart
 			pcall(function()
 				if flingpart ~= nil and flingpart.Parent.Parent ~= nil then
