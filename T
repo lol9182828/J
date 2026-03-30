@@ -1,4 +1,4 @@
-ñ--[[getgenv().OxideSettings = {
+--[[getgenv().OxideSettings = {
 Refit = true,
 noclip = true,
 FlingEnabled = false,
