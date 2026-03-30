@@ -354,7 +354,7 @@ end)
 	end)
 end
 local function redo2()
-	task.wait(0) -- FIX: task.wait() es MÁS RÁPIDO que wait()
+	wait(0)
 	local gay = true -- dont edit >:(
 	hmode = nil
 	if gay == true then
@@ -1087,12 +1087,12 @@ end
 redo()
 task.wait(0.05)
 plr.Character:WaitForChild("HumanoidRootPart").CFrame =CFrame.new( workspace.non.HumanoidRootPart.CFrame.X + 2 , workspace.FallenPartsDestroyHeight + 300, workspace.non.HumanoidRootPart.CFrame.Z  ) 
--- FIX: Ya NO llamamos redo2() aquí - esto causaba el reset lento inicial
--- El script carga INSTANTÁNEAMENTE ahora
+task.wait(.05)
+redo2()
 game:GetService("StarterGui"):SetCore("SendNotification", {
-	Title = "Oxide Reanimation V3.7  - ULTRA FAST";
+	Title = "Oxide Reanimation V3.7  - Respawn Time";
 	Duration = 20;
-	Text = "Loaded instantly! No reset needed."
+	Text = "Refit will take roughly 0.1 seconds."
 })
 local sin=math.sin
 local oldh = workspace.FallenPartsDestroyHeight
@@ -1124,27 +1124,17 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 		pcall(function() if velocity then velocity:Disconnect(); velocity = nil end end)
 		pcall(function() if removedl then removedl:Disconnect(); removedl = nil end end)
 		pcall(function() if moveloop then moveloop:Disconnect(); moveloop = nil end end)
-		
-		-- FIX: Inmediatamente forzar la cámara al fake character
-		-- ESTO previene que la cámara vaya al personaje real
-		workspace.CurrentCamera.CameraSubject = workspace.non:FindFirstChild("Humanoid")
-		
 		if OxideSettings.HatCollide == false then 
 			repeat wait() until re:FindFirstChildOfClass("Humanoid")
 			moveloop = game:GetService("RunService").Heartbeat:Connect(function()
 				char:FindFirstChildOfClass("Humanoid"):Move(re:FindFirstChildOfClass("Humanoid").MoveDirection)   
 			end)
 		end
-		
-		-- FIX: Restaurar cámara RÁPIDAMENTE
-		task.spawn(function()
-			task.wait(0.01)
+		task.wait(.01)
+		pcall(function()
 			workspace.CurrentCamera.CFrame = curcamcf
-			-- Forzar subject al fake inmediatamente
-			workspace.CurrentCamera.CameraSubject = workspace.non:FindFirstChild("Humanoid")
 		end)
-		
-		-- FIX: Optimización - wait() reducidos a mínimo
+		task.wait(0.05)
 		if  OxideSettings.ToolFling == true then 
 			OxideSettings.Fling = false 
 		end
@@ -1154,10 +1144,9 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 			end 
 		end
 		if OxideSettings.HatCollide == false then
-			-- FIX: Espera optimizada con task.wait()
-			repeat task.wait() until plr.Character:FindFirstChild("Head")
+			repeat wait() until plr.Character:FindFirstChild("Head")
 			workspace.CurrentCamera.CameraSubject = workspace.non:FindFirstChild("Humanoid")
-			repeat task.wait() until plr.Character:FindFirstChildOfClass("Accessory")
+			repeat wait() until plr.Character:FindFirstChildOfClass("Accessory")
 		end
 		if OxideSettings.HideCharacter == false then
 			if plr.Character.Name ~= "non" then
