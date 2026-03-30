@@ -373,7 +373,7 @@ local function redo2()
 		Hat.Rename("rbxassetid://14255544465","","LARM")
 		Hat.Rename("rbxassetid://14255544465","","RARM")
 		Hat.Rename("rbxassetid://13415110780", "Tor")	
-		Hat.Rename("http://www.roblox.com/asset/?id=83269599235494", "Tor")
+		Hat.Rename("rbxassetid://83269599235494", "Tor")
 		Hat.Rename("rbxassetid://18640899481", "Tor")
 		Hat.Rename("rbxassetid://89183204903931", "Tor")
 		Hat.Rename("rbxassetid://14255543546","","LARM")
@@ -753,37 +753,87 @@ local function redo2()
 	local rad, cos, sin, random = math.rad, math.cos, math.sin, math.random
 	local sin=math.sin
 	local plrs = game:GetService("Players")
+	
+	-- ⭐ OPTIMIZACIÓN: Cache de accesorios
+	local accessoryCache = {}
+	local function updateCache()
+		accessoryCache = {}
+		for _, v in ipairs(c:GetChildren()) do
+			if (v:IsA("Accessory") or v:IsA("Tool")) and v:FindFirstChild("Handle") then
+				table.insert(accessoryCache, v)
+			end
+		end
+	end
+	updateCache()
+	
 	if OxideSettings.ToolFling == false then
+		-- ⭐ OPTIMIZACIÓN: Throttling de Heartbeat
+		local frameSkip = 0
+		local cacheUpdate = 0
 		velocity = game:GetService("RunService").Heartbeat:Connect(function()
+			frameSkip = frameSkip + 1
+			if frameSkip < 2 then return end -- Solo ejecutar cada 2 frames
+			frameSkip = 0
+			
+			cacheUpdate = cacheUpdate + 1
+			if cacheUpdate >= 30 then  -- Actualizar cache cada 30 frames
+				updateCache()
+				cacheUpdate = 0
+			end
+			
 			local _t = os.clock()
 			local _tv = char.Torso.AssemblyLinearVelocity
 			local _ta = char.Torso.AssemblyAngularVelocity
 			local _s = math.sin(_t*1000)
 			local _c2 = math.cos(_t*1000)
-			for i,v in pairs(c:GetChildren()) do
-				if v:IsA("Accessory") or v:IsA("Tool") then
-					v.Handle.AssemblyLinearVelocity = Vector3.new(_tv.X*15 - 10*_c2, 28.5312 + _s, _tv.Z*15 + 3*math.sin(_t*12000))
-					v.Handle.AssemblyAngularVelocity = Vector3.new(0, math.sin(_t*10), 0) + _ta * 2
-					v.Handle.CanCollide = false
-				end
+			local _s2 = math.sin(_t*12000)
+			local _s3 = math.sin(_t*10)
+			
+			-- ⭐ OPTIMIZACIÓN: Usar cache en vez de GetChildren()
+			for _, v in ipairs(accessoryCache) do
+				local handle = v.Handle
+				handle.AssemblyLinearVelocity = Vector3.new(_tv.X*15 - 10*_c2, 28.5312 + _s, _tv.Z*15 + 3*_s2)
+				handle.AssemblyAngularVelocity = Vector3.new(0, _s3, 0) + _ta * 2
+				handle.CanCollide = false
 			end
 		end)
 	else 
+		local frameSkip = 0
+		local cacheUpdate = 0
 		velocity = game:GetService("RunService").Heartbeat:Connect(function()
-			for i,v in pairs(c:GetChildren()) do
-				if v:IsA("Accessory")  then
-					v.Handle.AssemblyLinearVelocity = Vector3.new(char.Torso.AssemblyLinearVelocity.X*15 -10*math.clamp(math.sin(os.clock()*1000),0.5,1)   ,30.499+math.sin(os.clock()*10000), char.Torso.AssemblyLinearVelocity.Z*15 +6) 
-					v.Handle.AssemblyAngularVelocity = char.Torso.AssemblyAngularVelocity * 10
+			frameSkip = frameSkip + 1
+			if frameSkip < 2 then return end
+			frameSkip = 0
+			
+			cacheUpdate = cacheUpdate + 1
+			if cacheUpdate >= 30 then
+				updateCache()
+				cacheUpdate = 0
+			end
+			
+			local _t = os.clock()
+			local _tv = char.Torso.AssemblyLinearVelocity
+			local _ta = char.Torso.AssemblyAngularVelocity
+			local _s1 = math.sin(_t*1000)
+			local _s2 = math.sin(_t*10000)
+			local _s3 = math.sin(_t*100)
+			local _clamp = math.clamp(_s1, 0.5, 1)
+			
+			for _, v in ipairs(accessoryCache) do
+				local handle = v.Handle
+				if v:IsA("Accessory") then
+					handle.AssemblyLinearVelocity = Vector3.new(_tv.X*15 -10*_clamp, 30.499+_s2, _tv.Z*15 +6) 
+					handle.AssemblyAngularVelocity = _ta * 10
 				elseif v:IsA("Tool") then 
 					if burgermeat == true then
 						pcall(function()
-							v.Handle.AssemblyLinearVelocity = Vector3.new(9e9 -9e7, 9e9) 
-							v.Handle.AssemblyAngularVelocity = Vector3.new(9e9 -9e7, 9e9) 
-							v.Handle.CanCollide = false
+							handle.AssemblyLinearVelocity = Vector3.new(9e9 -9e7, 9e9) 
+							handle.AssemblyAngularVelocity = Vector3.new(9e9 -9e7, 9e9) 
+							handle.CanCollide = false
 						end)
 					else 
-						v.Handle.AssemblyLinearVelocity = Vector3.new(char.Torso.AssemblyLinearVelocity.X*15 -5   , 35.499+math.sin(os.clock()*100), char.Torso.AssemblyLinearVelocity.Z*15 +5) 
-						v.Handle.AssemblyAngularVelocity = char.Torso.AssemblyAngularVelocity
+						handle.AssemblyLinearVelocity = Vector3.new(_tv.X*15 -5, 35.499+_s3, _tv.Z*15 +5) 
+						handle.AssemblyAngularVelocity = _ta
 					end
 				end
 			end
@@ -803,13 +853,37 @@ local function redo2()
 	--task.wait(0.05)  
 	local removinghealth = false
 	local sin = math.sin
+	local cos = math.cos
 	local plrs = game:GetService("Players")
 	local antisleepMultiplier=Vector3.new(.005,.005,.005)
 	OxideSettings.HeadAngle = CFrame.Angles(0,0,0)
 	local hum = char:FindFirstChildOfClass("Humanoid")
+	
+	-- ⭐ OPTIMIZACIÓN: Cache para accesorios del personaje
+	local charAccessoryCache = {}
+	local function updateCharCache()
+		charAccessoryCache = {}
+		for _, v in ipairs(c:GetChildren()) do
+			if v:IsA("Accessory") then
+				table.insert(charAccessoryCache, v)
+			end
+		end
+	end
+	updateCharCache()
+	
+	-- ⭐ OPTIMIZACIÓN: Pre-calcular valores constantes
+	local rad0 = math.rad(0)
+	local rad90 = math.rad(90)
 
 	if OxideSettings.CustomHats == false then
+		local frameSkip = 0
+		local cacheUpdateFrame = 0
 		connect = game:GetService("RunService").Heartbeat:Connect(function(set)
+			-- ⭐ OPTIMIZACIÓN: Throttling - ejecutar cada 2 frames
+			frameSkip = frameSkip + 1
+			if frameSkip < 2 then return end
+			frameSkip = 0
+			
 			_oxFrame = _oxFrame + 1
 			sine=os.clock
 			flingpart = OxideSettings.flingpart
@@ -826,42 +900,50 @@ local function redo2()
 					flingpart = nil
 				end
 			end)
-			local antisleep=Vector3.new(0.005*sin(sine()*8),0.0045*sin(sine()*6),0.005*math.cos(sine()*7))
+			local antisleep=Vector3.new(0.005*sin(sine()*8),0.0045*sin(sine()*6),0.005*cos(sine()*7))
 			workspace.FallenPartsDestroyHeight = oldh
 			if c:FindFirstChild("Tor") then
 				c["Tor"].Handle.CFrame = char["Torso"].CFrame   + antisleep
 			end
 			if c:FindFirstChild("gooblet") then
 				if nlia == false then 
-					c["gooblet"].Handle.CFrame = char["Left Arm"].CFrame * CFrame.Angles(math.rad(0),math.rad(0),math.rad(90))  +antisleep
+					c["gooblet"].Handle.CFrame = char["Left Arm"].CFrame * CFrame.Angles(rad0,rad0,rad90)  +antisleep
 				else 
-					c["gooblet"].Handle.CFrame = char["Left Arm"].CFrame * CFrame.Angles(math.rad(0),math.rad(90),math.rad(0))  +antisleep
+					c["gooblet"].Handle.CFrame = char["Left Arm"].CFrame * CFrame.Angles(rad0,rad90,rad0)  +antisleep
 				end
 			end
 			if c:FindFirstChild("fooblet") then
 				if nria == false then 
-					c["fooblet"].Handle.CFrame = char["Right Arm"].CFrame * CFrame.Angles(math.rad(0),math.rad(0),math.rad(90))+antisleep
+					c["fooblet"].Handle.CFrame = char["Right Arm"].CFrame * CFrame.Angles(rad0,rad0,rad90)+antisleep
 				else 
-					c["fooblet"].Handle.CFrame = char["Right Arm"].CFrame * CFrame.Angles(math.rad(0),math.rad(90),math.rad(0))+antisleep
+					c["fooblet"].Handle.CFrame = char["Right Arm"].CFrame * CFrame.Angles(rad0,rad90,rad0)+antisleep
 				end
 			end
 			if c:FindFirstChild("Accessory (rightleg)") then
-				c["Accessory (rightleg)"].Handle.CFrame = char["Right Leg"].CFrame  * CFrame.Angles(math.rad(0),math.rad(0),math.rad(90))  +antisleep
+				c["Accessory (rightleg)"].Handle.CFrame = char["Right Leg"].CFrame  * CFrame.Angles(rad0,rad0,rad90)  +antisleep
 			end
 			if c:FindFirstChild("Accessory (LLeg)") then
-				c["Accessory (LLeg)"].Handle.CFrame = char["Left Leg"].CFrame  * CFrame.Angles(math.rad(0),math.rad(0),math.rad(90))  +antisleep
+				c["Accessory (LLeg)"].Handle.CFrame = char["Left Leg"].CFrame  * CFrame.Angles(rad0,rad0,rad90)  +antisleep
 			end
 
+			-- ⭐ OPTIMIZACIÓN: Actualizar cache cada 30 frames
+			cacheUpdateFrame = cacheUpdateFrame + 1
+			if cacheUpdateFrame >= 30 then
+				updateCharCache()
+				cacheUpdateFrame = 0
+			end
+
+			-- ⭐ OPTIMIZACIÓN: Usar cache en vez de pairs cada frame
 			pcall(function()
-				for _,v in pairs(c:GetChildren()) do
-					if v:IsA("Accessory") and v.Name ~= "gooblet"  and v.Name ~= "fooblet"  and v.Name ~= "BlueRobotArm" and not string.find(v.Name,"Accessory (Noob") and v.Name ~= "Accessory (NoobLeftArm)"  and v.Name ~= "Accessory (NoobTorso)"  and v.Name ~= "Accessory (NoobRightArm)" and v.Name ~= "GreyRobotArm"   and v.Name ~= "Tor" and v.Name ~= "PurpleRobotArm" and v.Name ~= "RobotArmTest"  and v.Name ~= "LARM" and v.Name ~= "RARM" and v.Name ~= "Accessory (rightleg)" and v.Name ~= "Accessory (LLeg)" then  
+				for _, v in ipairs(charAccessoryCache) do
+					if v.Name ~= "gooblet"  and v.Name ~= "fooblet"  and v.Name ~= "BlueRobotArm" and not string.find(v.Name,"Accessory (Noob") and v.Name ~= "Accessory (NoobLeftArm)"  and v.Name ~= "Accessory (NoobTorso)"  and v.Name ~= "Accessory (NoobRightArm)" and v.Name ~= "GreyRobotArm"   and v.Name ~= "Tor" and v.Name ~= "PurpleRobotArm" and v.Name ~= "RobotArmTest"  and v.Name ~= "LARM" and v.Name ~= "RARM" and v.Name ~= "Accessory (rightleg)" and v.Name ~= "Accessory (LLeg)" then  
 						v.Handle.CFrame = char[v.Name].Handle.CFrame +antisleep
 						v.Handle.CanTouch = false
 					end
 				end
 			end)
 			if _oxFrame % 30 == 0 then pcall(function()
-				for _,v in pairs(char:GetChildren()) do
+				for _,v in ipairs(char:GetChildren()) do
 					if v:IsA("Accessory") and v.Name ~= "gooblet" and not string.find(v.Name, "gooblet") and not table.find(OxideSettings.ClientHats,v.Name) and v.Name ~= "fooblet" and v.Name ~= "Black"  and v.Name ~= "Tor"  and v.Name ~= "BlueRobotArm" and v.Name ~= "GreyRobotArm"   and v.Name ~= "Tor" and v.Name ~= "PurpleRobotArm" and v.Name ~= "RobotArmTest"  and v.Name ~= "LARM" and v.Name ~= "RARM" and v.Name ~= "Accessory (rightleg)" and v.Name ~= "Accessory (LLeg)" then  
 						if not c:FindFirstChild(v.Name) then 
 							v.Handle.Transparency = 0.5
