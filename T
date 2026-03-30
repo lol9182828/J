@@ -682,8 +682,14 @@ local function redo2()
 			end
 		end
 	end
-	for i,v in tools do
-		table.remove(tools,table.find(tools,v))
+	table.clear(tools)
+	-- Limpia faketools anteriores para evitar acumulación entre respawns
+	for i = #faketools, 1, -1 do
+		local ft = faketools[i]
+		if ft and ft.Parent then
+			ft:Destroy()
+		end
+		table.remove(faketools, i)
 	end
 	for i,v in pairs(lp.Backpack:GetChildren()) do 
 		if v:IsA("Tool") and not string.find(v.Name,"FAKE")  then 
@@ -729,14 +735,7 @@ local function redo2()
 			v.Parent = lp.Backpack
 		end
 		c:BreakJoints()
-		if exploit ~= "CaetSploit" then
-			replicatesignal(c:FindFirstChildOfClass("Humanoid").ServerBreakJoints)
-		else
-			replicatesignal2(c:FindFirstChildOfClass("Humanoid"),"ServerBreakJoints")
-		end
-		for i,v in tools do
-			v.Parent = c
-		end
+		-- replicatesignal removido: causaba equip masivo de tools al respawnear
 	end)
 	local curcamcf = workspace.CurrentCamera.CFrame
 	task.spawn(function()	
@@ -749,7 +748,7 @@ local function redo2()
 		workspace.CurrentCamera.CFrame = curcamcf
 	end)
 	local burgermeat = false 
-	local _oxFrameCount = 0
+	local _oxFrame = 0
 	local clock = os.clock
 	local rad, cos, sin, random = math.rad, math.cos, math.sin, math.random
 	local sin=math.sin
@@ -757,14 +756,14 @@ local function redo2()
 	if OxideSettings.ToolFling == false then
 		velocity = game:GetService("RunService").Heartbeat:Connect(function()
 			local _t = os.clock()
-			local _torsoVel = char.Torso.AssemblyLinearVelocity
-			local _torsoAngVel = char.Torso.AssemblyAngularVelocity
-			local _sinT = math.sin(_t*1000)
-			local _cosT = math.cos(_t*1000)
+			local _tv = char.Torso.AssemblyLinearVelocity
+			local _ta = char.Torso.AssemblyAngularVelocity
+			local _s = math.sin(_t*1000)
+			local _c2 = math.cos(_t*1000)
 			for i,v in pairs(c:GetChildren()) do
 				if v:IsA("Accessory") or v:IsA("Tool") then
-					v.Handle.AssemblyLinearVelocity = Vector3.new(_torsoVel.X*15 - 10*_cosT, 28.5312 + _sinT, _torsoVel.Z*15 + 3*math.sin(_t*12000))
-					v.Handle.AssemblyAngularVelocity = Vector3.new(0, math.sin(_t*10), 0) + _torsoAngVel * 2
+					v.Handle.AssemblyLinearVelocity = Vector3.new(_tv.X*15 - 10*_c2, 28.5312 + _s, _tv.Z*15 + 3*math.sin(_t*12000))
+					v.Handle.AssemblyAngularVelocity = Vector3.new(0, math.sin(_t*10), 0) + _ta * 2
 					v.Handle.CanCollide = false
 				end
 			end
@@ -811,7 +810,7 @@ local function redo2()
 
 	if OxideSettings.CustomHats == false then
 		connect = game:GetService("RunService").Heartbeat:Connect(function(set)
-			_oxFrameCount = (_oxFrameCount or 0) + 1
+			_oxFrame = _oxFrame + 1
 			sine=os.clock
 			flingpart = OxideSettings.flingpart
 			pcall(function()
@@ -861,36 +860,33 @@ local function redo2()
 					end
 				end
 			end)
-			-- transparency check throttled: runs every 30 frames only
-			if _oxFrameCount % 30 == 0 then
-				pcall(function()
-					for _,v in pairs(char:GetChildren()) do
-						if v:IsA("Accessory") and v.Name ~= "gooblet" and not string.find(v.Name, "gooblet") and not table.find(OxideSettings.ClientHats,v.Name) and v.Name ~= "fooblet" and v.Name ~= "Black"  and v.Name ~= "Tor"  and v.Name ~= "BlueRobotArm" and v.Name ~= "GreyRobotArm"   and v.Name ~= "Tor" and v.Name ~= "PurpleRobotArm" and v.Name ~= "RobotArmTest"  and v.Name ~= "LARM" and v.Name ~= "RARM" and v.Name ~= "Accessory (rightleg)" and v.Name ~= "Accessory (LLeg)" then  
-							if not c:FindFirstChild(v.Name) then 
-								v.Handle.Transparency = 0.5
-							end
+			if _oxFrame % 30 == 0 then pcall(function()
+				for _,v in pairs(char:GetChildren()) do
+					if v:IsA("Accessory") and v.Name ~= "gooblet" and not string.find(v.Name, "gooblet") and not table.find(OxideSettings.ClientHats,v.Name) and v.Name ~= "fooblet" and v.Name ~= "Black"  and v.Name ~= "Tor"  and v.Name ~= "BlueRobotArm" and v.Name ~= "GreyRobotArm"   and v.Name ~= "Tor" and v.Name ~= "PurpleRobotArm" and v.Name ~= "RobotArmTest"  and v.Name ~= "LARM" and v.Name ~= "RARM" and v.Name ~= "Accessory (rightleg)" and v.Name ~= "Accessory (LLeg)" then  
+						if not c:FindFirstChild(v.Name) then 
+							v.Handle.Transparency = 0.5
 						end
 					end
-					if not c:FindFirstChild("gooblet") then 
-						char["Left Arm"].Transparency = 0.5
-					end 
-					if not c:FindFirstChild("fooblet") then 
-						pcall(function()
-							char["Right Arm"].Transparency = 0.5
-						end)
-					end 
-					if not c:FindFirstChild("Accessory (rightleg)") then 
-						char["Right Leg"].Transparency = 0.5
-					end 
-					if not c:FindFirstChild("Accessory (LLeg)") then 
-						char["Left Leg"].Transparency = 0.5
-					end 
-					if not c:FindFirstChild("Tor") then 
-						char["Torso"].Transparency = 0.5
-					end 
-				end)
-			end
-			if _oxFrameCount % 10 == 0 then
+				end
+				if not c:FindFirstChild("gooblet") then 
+					char["Left Arm"].Transparency = 0.5
+				end 
+				if not c:FindFirstChild("fooblet") then 
+					pcall(function()
+						char["Right Arm"].Transparency = 0.5
+					end)
+				end 
+				if not c:FindFirstChild("Accessory (rightleg)") then 
+					char["Right Leg"].Transparency = 0.5
+				end 
+				if not c:FindFirstChild("Accessory (LLeg)") then 
+					char["Left Leg"].Transparency = 0.5
+				end 
+				if not c:FindFirstChild("Tor") then 
+					char["Torso"].Transparency = 0.5
+				end 
+			end) end
+			if _oxFrame % 10 == 0 then
 				for _,v in pairs(c:GetChildren()) do
 					if v:IsA("Accessory") then
 						v.Handle.CanCollide = false
@@ -918,7 +914,6 @@ local function redo2()
 		end)
 	else 
 		connect = game:GetService("RunService").Heartbeat:Connect(function(set)
-			_oxFrameCount = (_oxFrameCount or 0) + 1
 			sine=os.clock
 			flingpart = OxideSettings.flingpart
 			pcall(function()
@@ -991,36 +986,33 @@ local function redo2()
 					end
 				end
 			end)
-			-- transparency check throttled: runs every 30 frames only
-			if _oxFrameCount % 30 == 0 then
-				pcall(function()
-					for _,v in pairs(char:GetChildren()) do
-						if v:IsA("Accessory") and v.Name ~= "gooblet" and not string.find(v.Name, "gooblet") and not table.find(OxideSettings.ClientHats,v.Name) and v.Name ~= "fooblet" and v.Name ~= "Black"  and v.Name ~= "Tor"  and v.Name ~= "BlueRobotArm" and v.Name ~= "GreyRobotArm"   and v.Name ~= "Tor" and v.Name ~= "PurpleRobotArm" and v.Name ~= "RobotArmTest"  and v.Name ~= "LARM" and v.Name ~= "RARM" and v.Name ~= "Accessory (rightleg)" and v.Name ~= "Accessory (LLeg)" then  
-							if not c:FindFirstChild(v.Name) then 
-								v.Handle.Transparency = 0.5
-							end
+			if _oxFrame % 30 == 0 then pcall(function()
+				for _,v in pairs(char:GetChildren()) do
+					if v:IsA("Accessory") and v.Name ~= "gooblet" and not string.find(v.Name, "gooblet") and not table.find(OxideSettings.ClientHats,v.Name) and v.Name ~= "fooblet" and v.Name ~= "Black"  and v.Name ~= "Tor"  and v.Name ~= "BlueRobotArm" and v.Name ~= "GreyRobotArm"   and v.Name ~= "Tor" and v.Name ~= "PurpleRobotArm" and v.Name ~= "RobotArmTest"  and v.Name ~= "LARM" and v.Name ~= "RARM" and v.Name ~= "Accessory (rightleg)" and v.Name ~= "Accessory (LLeg)" then  
+						if not c:FindFirstChild(v.Name) then 
+							v.Handle.Transparency = 0.5
 						end
 					end
-					if not c:FindFirstChild("gooblet") then 
-						char["Left Arm"].Transparency = 0.5
-					end 
-					if not c:FindFirstChild("fooblet") then 
-						pcall(function()
-							char["Right Arm"].Transparency = 0.5
-						end)
-					end 
-					if not c:FindFirstChild("Accessory (rightleg)") then 
-						char["Right Leg"].Transparency = 0.5
-					end 
-					if not c:FindFirstChild("Accessory (LLeg)") then 
-						char["Left Leg"].Transparency = 0.5
-					end 
-					if not c:FindFirstChild("Tor") then 
-						char["Torso"].Transparency = 0.5
-					end 
-				end)
-			end
-			if _oxFrameCount % 10 == 0 then
+				end
+				if not c:FindFirstChild("gooblet") then 
+					char["Left Arm"].Transparency = 0.5
+				end 
+				if not c:FindFirstChild("fooblet") then 
+					pcall(function()
+						char["Right Arm"].Transparency = 0.5
+					end)
+				end 
+				if not c:FindFirstChild("Accessory (rightleg)") then 
+					char["Right Leg"].Transparency = 0.5
+				end 
+				if not c:FindFirstChild("Accessory (LLeg)") then 
+					char["Left Leg"].Transparency = 0.5
+				end 
+				if not c:FindFirstChild("Tor") then 
+					char["Torso"].Transparency = 0.5
+				end 
+			end) end
+			if _oxFrame % 10 == 0 then
 				for _,v in pairs(c:GetChildren()) do
 					if v:IsA("Accessory") then
 						v.Handle.CanCollide = false
@@ -1127,6 +1119,11 @@ char:FindFirstChild("Left Leg").Touched:Connect(function(p)
 end)
 respawnloop = plr.CharacterAdded:Connect(function(re)
 	if re ~= char then
+		-- Desconectar loops anteriores para evitar acumulación
+		pcall(function() if connect then connect:Disconnect(); connect = nil end end)
+		pcall(function() if velocity then velocity:Disconnect(); velocity = nil end end)
+		pcall(function() if removedl then removedl:Disconnect(); removedl = nil end end)
+		pcall(function() if moveloop then moveloop:Disconnect(); moveloop = nil end end)
 		if OxideSettings.HatCollide == false then 
 			repeat wait() until re:FindFirstChildOfClass("Humanoid")
 			moveloop = game:GetService("RunService").Heartbeat:Connect(function()
