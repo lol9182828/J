@@ -40,6 +40,7 @@ if OxideSettings.Scale == nil then
 end
 if OxideSettings.CH.Head == nil then 
 	OxideSettings.CH.Head = {}
+	end
 if OxideSettings.CH.Head.Name == nil then 
 	OxideSettings.CH.Head.Name = "wtfgangimgonnakms!"
 end
@@ -77,9 +78,9 @@ local function respawnfunc()
 	curcamcf = workspace.CurrentCamera.CFrame
 	curcamsubject = workspace.CurrentCamera.CameraSubject
 	task.wait(0)
-	pcall(function() connect:Disconnect() end)
-	pcall(function() velocity:Disconnect() end)
-	pcall(function() removedl:Disconnect() end)
+	if connect then pcall(function() connect:Disconnect() end); connect = nil end
+	if velocity then pcall(function() velocity:Disconnect() end); velocity = nil end
+	if removedl then pcall(function() removedl:Disconnect() end); removedl = nil end
 	transparent()
 end
 local flingpos = game:GetService("Players").LocalPlayer:GetMouse().Hit
