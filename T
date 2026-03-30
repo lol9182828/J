@@ -213,7 +213,7 @@ local function redo()
 		hmode = "alsoo3" -- hate this guy
 	end
 	--game:GetService("Workspace")["Error_30363"].EyesOfTheEverWorld.Name = "Puffer Vest"
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/Nitro-GT/OxideReanim/main/stuff2"))()
+	pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Nitro-GT/OxideReanim/main/stuff2"))() end)
 	local c = game:GetService("Players").LocalPlayer.Character
 	if not workspace:FindFirstChild("non") then
 		if OxideSettings.Legacy == false then 
@@ -478,7 +478,7 @@ local function redo2()
 		end 
 	end)
 	pcall(function()
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/Nitro-GT/OxideReanim/main/renameclones3"))()
+		pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Nitro-GT/OxideReanim/main/renameclones3"))() end)
 	end)
 	pcall(function()
 		c["gooblet-1"].Name = "fooblet"
@@ -735,7 +735,7 @@ local function redo2()
 		for i,v in pairs(tools) do
 			v.Parent = lp.Backpack
 		end
-		c:BreakJoints()
+		pcall(function() c:BreakJoints() end)
 	end)
 	if curcamcf == nil then
 		curcamcf = workspace.CurrentCamera.CFrame
@@ -1105,7 +1105,7 @@ local function redo2()
 end
 redo()
 task.wait(0.05)
-plr.Character:WaitForChild("HumanoidRootPart").CFrame =CFrame.new( workspace.non.HumanoidRootPart.CFrame.X + 2 , workspace.FallenPartsDestroyHeight + 300, workspace.non.HumanoidRootPart.CFrame.Z  ) 
+plr.Character:WaitForChild("HumanoidRootPart").CFrame = workspace.non.HumanoidRootPart.CFrame * CFrame.new(2, 0, 0)
 task.wait(.05)
 redo2()
 game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -1150,11 +1150,11 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 		pcall(function() if removedl then removedl:Disconnect(); removedl = nil end end)
 		pcall(function() if moveloop then moveloop:Disconnect(); moveloop = nil end end)
 		-- Esperar a que el personaje esté completamente listo
-		repeat task.wait(0) until re:FindFirstChild("HumanoidRootPart") and re:FindFirstChildOfClass("Humanoid")
+		do local _t=tick(); repeat task.wait(0) until (re:FindFirstChild("HumanoidRootPart") and re:FindFirstChildOfClass("Humanoid")) or tick()-_t>5 end
 		-- Mantener cámara congelada durante toda la espera
 		cam.CFrame = _frozenCF
 		if OxideSettings.HatCollide == false then 
-			repeat task.wait(0) until re:FindFirstChildOfClass("Humanoid")
+			do local _t=tick(); repeat task.wait(0) until re:FindFirstChildOfClass("Humanoid") or tick()-_t>5 end
 			moveloop = game:GetService("RunService").Heartbeat:Connect(function()
 				char:FindFirstChildOfClass("Humanoid"):Move(re:FindFirstChildOfClass("Humanoid").MoveDirection)   
 			end)
@@ -1169,7 +1169,7 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 			end 
 		end
 		if OxideSettings.HatCollide == false then
-			repeat task.wait(0) until plr.Character:FindFirstChild("Head")
+			do local _t=tick(); repeat task.wait(0) until plr.Character:FindFirstChild("Head") or tick()-_t>5 end
 			workspace.CurrentCamera.CameraSubject = workspace.non:FindFirstChild("Humanoid")
 			task.wait(0.05) -- era repeat wait() until Accessory, muy lento
 		end
@@ -1266,9 +1266,9 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 			if plr.Character.Name ~= "non" then
 				if OxideSettings.TeleportCharacter == true then
 					if OxideSettings.HatCollide == false then
-						plr.Character:WaitForChild("HumanoidRootPart").CFrame =CFrame.new( workspace.non.HumanoidRootPart.CFrame.X + 45 , workspace.FallenPartsDestroyHeight + 300, workspace.non.HumanoidRootPart.CFrame.Z  ) 
+						plr.Character:WaitForChild("HumanoidRootPart").CFrame = workspace.non.HumanoidRootPart.CFrame * CFrame.new(45, 0, 0)
 					else 
-						plr.Character:WaitForChild("HumanoidRootPart").CFrame =CFrame.new( workspace.non.HumanoidRootPart.CFrame.X + 45 , workspace.FallenPartsDestroyHeight + 300, workspace.non.HumanoidRootPart.CFrame.Z  ) 
+						plr.Character:WaitForChild("HumanoidRootPart").CFrame = workspace.non.HumanoidRootPart.CFrame * CFrame.new(45, 0, 0)
 					end
 				end
 				local c =plr.Character
@@ -1276,7 +1276,7 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 					if OxideSettings.HatCollide == true then
 						c:BreakJoints()
 						c:WaitForChild("Humanoid").Health = 0		
-						repeat task.wait() until c:FindFirstChildOfClass("Accessory") or not c:IsDescendantOf(workspace)
+						do local _t=tick(); repeat task.wait() until c:FindFirstChildOfClass("Accessory") or not c:IsDescendantOf(workspace) or tick()-_t>5 end
 					end
 				end
 				if OxideSettings.HatCollide == false then
@@ -1289,7 +1289,7 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 				task.wait(0)
 				if lp.Character ~= workspace.non then 
 					moveloop:Disconnect()
-					lp.Character:BreakJoints()
+					pcall(function() lp.Character:BreakJoints() end)
 					task.wait(0)
 					lp.Character = workspace.non
 				end
