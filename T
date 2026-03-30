@@ -662,28 +662,24 @@ local function redo2()
 			v.Handle:BreakJoints()
 		end
 	end 
-	if OxideSettings.Legacy == false then 
-		for _, child in pairs(char:GetChildren()) do
-			if child:IsA("BasePart") then
-				child.Transparency = 1
-			elseif child:IsA("Accessory") then
-				child.Handle.Transparency = 1
-			end
-		end
-	else	
-		for _, child in pairs(char:GetChildren()) do
-			if child:IsA("BasePart") and child.Name ~= "HumanoidRootPart" and child.Name ~= "Head" then
-				child.Transparency = 0
-			elseif child:IsA("Accessory") then
-				child.Handle.Transparency = 0
-			end
-		end
-		for _, child in pairs(c:GetDescendants()) do
-			if child:IsA("BasePart") and child.Name ~= "HumanoidRootPart" then
-				child.Transparency = 1
-			end
+	-- Hat char (fake rig): todo invisible
+	for _, child in pairs(char:GetChildren()) do
+		if child:IsA("BasePart") then
+			child.Transparency = 1
+		elseif child:IsA("Accessory") then
+			child.Handle.Transparency = 1
 		end
 	end
+	-- Personaje real: visible (no ocultar)
+	for _, child in pairs(c:GetChildren()) do
+		if child:IsA("BasePart") and child.Name ~= "HumanoidRootPart" then
+			child.Transparency = 0
+		elseif child:IsA("Accessory") then
+			pcall(function() child.Handle.Transparency = 0 end)
+		end
+	end
+	-- HRP del real: invisible para que no se vea flotando
+	pcall(function() c.HumanoidRootPart.Transparency = 1 end)
 	for i,v in tools do
 		table.remove(tools,table.find(tools,v))
 	end
@@ -820,6 +816,10 @@ local function redo2()
 				workspace.CurrentCamera.CameraSubject = char:FindFirstChildOfClass("Humanoid")
 				workspace.FallenPartsDestroyHeight = oldh 
 			end)
+			-- Cabeza real sigue al hat char
+			pcall(function()
+				c.Head.CFrame = char.Head.CFrame
+			end)
 			if c:FindFirstChild("Tor") then
 				c["Tor"].Handle.CFrame = char["Torso"].CFrame   + antisleep
 			end
@@ -923,6 +923,10 @@ local function redo2()
 			pcall(function()
 				workspace.CurrentCamera.CameraSubject = char:FindFirstChildOfClass("Humanoid")
 				workspace.FallenPartsDestroyHeight = oldh 
+			end)
+			-- Cabeza real sigue al hat char
+			pcall(function()
+				c.Head.CFrame = char.Head.CFrame
 			end)
 			if c:FindFirstChild("Tor") then
 				if char["Torso"]:FindFirstChildOfClass("SpecialMesh") then 
