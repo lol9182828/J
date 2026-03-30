@@ -1,4 +1,4 @@
---[[getgenv().OxideSettings = {
+ñ--[[getgenv().OxideSettings = {
 Refit = true,
 noclip = true,
 FlingEnabled = false,
@@ -77,10 +77,15 @@ local function respawnfunc()
 	curcamcf = workspace.CurrentCamera.CFrame
 	-- ELIMINADO: replicatesignal(game:GetService("Players").LocalPlayer.ConnectDiedSignalBackend)
 	task.wait(0.05) -- RESPAWN INSTANTÁNEO
-	connect:Disconnect()
-	velocity:Disconnect()
-	removedl:Disconnect()
+	pcall(function() if connect then connect:Disconnect(); connect = nil end end)
+	pcall(function() if velocity then velocity:Disconnect(); velocity = nil end end)
+	pcall(function() if removedl then removedl:Disconnect(); removedl = nil end end)
 	transparent()
+	-- Reiniciar reanimate después de desconectar
+	task.spawn(function()
+		task.wait(0.1)
+		pcall(function() redo2() end)
+	end)
 end
 local flingpos = game:GetService("Players").LocalPlayer:GetMouse().Hit
 local flingpart = game:GetService("Players").LocalPlayer:GetMouse().Target
@@ -1108,6 +1113,12 @@ char:FindFirstChild("Left Leg").Touched:Connect(function(p)
 end)
 respawnloop = plr.CharacterAdded:Connect(function(re)
 	if re ~= char then
+		-- Desconectar conexiones anteriores para evitar acumulación al respawnear
+		pcall(function() if connect then connect:Disconnect(); connect = nil end end)
+		pcall(function() if velocity then velocity:Disconnect(); velocity = nil end end)
+		pcall(function() if removedl then removedl:Disconnect(); removedl = nil end end)
+		pcall(function() if moveloop then moveloop:Disconnect(); moveloop = nil end end)
+
 		if OxideSettings.HatCollide == false then 
 			repeat wait() until re:FindFirstChildOfClass("Humanoid")
 			moveloop = game:GetService("RunService").Heartbeat:Connect(function()
