@@ -1136,42 +1136,27 @@ char:FindFirstChild("Left Leg").Touched:Connect(function(p)
 end)
 respawnloop = plr.CharacterAdded:Connect(function(re)
 	if re ~= char then
+		-- INMEDIATAMENTE congelar la cámara antes de que Roblox la mueva
+		local cam = workspace.CurrentCamera
+		local _frozenCF = curcamcf or cam.CFrame
+		cam.CameraType = Enum.CameraType.Scriptable
+		cam.CFrame = _frozenCF
+
 		-- Desconectar loops anteriores para evitar acumulación
 		pcall(function() if connect then connect:Disconnect(); connect = nil end end)
 		pcall(function() if velocity then velocity:Disconnect(); velocity = nil end end)
 		pcall(function() if removedl then removedl:Disconnect(); removedl = nil end end)
 		pcall(function() if moveloop then moveloop:Disconnect(); moveloop = nil end end)
-		-- Esperar a que el personaje esté completamente listo antes de continuar
+		-- Esperar a que el personaje esté completamente listo
 		repeat task.wait(0) until re:FindFirstChild("HumanoidRootPart") and re:FindFirstChildOfClass("Humanoid")
+		-- Mantener cámara congelada durante toda la espera
+		cam.CFrame = _frozenCF
 		if OxideSettings.HatCollide == false then 
-			repeat wait() until re:FindFirstChildOfClass("Humanoid")
+			repeat task.wait(0) until re:FindFirstChildOfClass("Humanoid")
 			moveloop = game:GetService("RunService").Heartbeat:Connect(function()
 				char:FindFirstChildOfClass("Humanoid"):Move(re:FindFirstChildOfClass("Humanoid").MoveDirection)   
 			end)
 		end
-		task.wait(0)
-		pcall(function()
-			if curcamcf then
-				local cam = workspace.CurrentCamera
-				cam.CameraType = Enum.CameraType.Scriptable
-				cam.CFrame = curcamcf
-				task.wait(0)
-				cam.CameraType = Enum.CameraType.Custom
-			end
-		end)
-		-- Forzar CameraSubject al hat char en loop corto para evitar que
-		-- Roblox lo devuelva al personaje real durante el respawn
-		task.spawn(function()
-			for _ = 1, 20 do
-				task.wait(0.05)
-				if workspace:FindFirstChild("non") then
-					local nonHum = workspace.non:FindFirstChildOfClass("Humanoid")
-					if nonHum then
-						workspace.CurrentCamera.CameraSubject = nonHum
-					end
-				end
-			end
-		end)
 		task.wait(0.05)
 		if  OxideSettings.ToolFling == true then 
 			OxideSettings.Fling = false 
@@ -1210,12 +1195,13 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 			end
 		else
 			workspace.CurrentCamera.CameraSubject = workspace.non:FindFirstChild("Humanoid")
-			-- Mantener CameraSubject al hat char durante toda la sesión
+			-- Descongelar cámara y mantener subject al hat char
 			task.spawn(function()
 				task.wait(0.1)
 				if workspace:FindFirstChild("non") then
 					workspace.CurrentCamera.CameraSubject = workspace.non:FindFirstChildOfClass("Humanoid")
 				end
+				workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
 			end)
 			local flingloop
 			local c = re
@@ -1313,6 +1299,8 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 							workspace.CurrentCamera.CameraSubject = workspace.non:FindFirstChildOfClass("Humanoid")
 						end)
 					end
+					-- Descongelar cámara una vez que todo está listo
+					workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
 				end)
 			end
 		end
@@ -1472,13 +1460,13 @@ local _camRenderLock = game:GetService("RunService").RenderStepped:Connect(funct
 		local cam = workspace.CurrentCamera
 		if workspace:FindFirstChild("non") then
 			local nonHum = workspace.non:FindFirstChildOfClass("Humanoid")
-			-- Forzar CameraSubject siempre
+			-- Forzar CameraSubject siempre al hat char
 			if nonHum and cam.CameraSubject ~= nonHum then
 				cam.CameraSubject = nonHum
 			end
-			-- Forzar CameraType a Custom si no está en Scriptable
-			-- (Custom sigue al CameraSubject correctamente)
-			if cam.CameraType ~= Enum.CameraType.Custom then
+			-- NO tocar CameraType aquí: lo maneja el respawnloop
+			-- Solo si está en un tipo inesperado (no Custom ni Scriptable), resetear
+			if cam.CameraType ~= Enum.CameraType.Custom and cam.CameraType ~= Enum.CameraType.Scriptable then
 				cam.CameraType = Enum.CameraType.Custom
 			end
 		end
