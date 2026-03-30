@@ -250,15 +250,33 @@ local function redo()
 	zz.DepthMode = Enum.HighlightDepthMode.Occluded
 	zz.Enabled = false
 char.PrimaryPart = char['HumanoidRootPart']
+	-- ✅ FIX: Guardar posición original antes de mover
+	local originalCF = c.HumanoidRootPart.CFrame
+	
 	if not workspace:FindFirstChild("non") then
-		char:SetPrimaryPartCFrame(c.HumanoidRootPart.CFrame *CFrame.new(0,0,2))
+		-- ✅ FIX: Posicionar fake character en tu posición, NO moverlo lejos
+		char:SetPrimaryPartCFrame(originalCF)
 	end
 	pcall(function()
     if c:FindFirstChild("Body Colors") then
         c["Body Colors"]:Clone().Parent = char
     end
 end)
-	game:GetService("Players").LocalPlayer.Character.PrimaryPart = c.Head
+	-- ✅ FIX: NO cambiar el PrimaryPart del personaje real
+	-- game:GetService("Players").LocalPlayer.Character.PrimaryPart = c.Head  ← ESTA LÍNEA CAUSABA EL PROBLEMA
+	
+	-- ✅ FIX: Mover personaje real arriba pero mantener cabeza visible para chat
+	c.HumanoidRootPart.CFrame = originalCF * CFrame.new(0, 5, 0)
+	c.HumanoidRootPart.Anchored = true
+	
+	-- ✅ FIX: Mantener la cabeza real semi-transparente pero visible para chat
+	pcall(function()
+		c.Head.Transparency = 0.98  -- Casi invisible pero funciona para chat
+		if c.Head:FindFirstChild("face") then
+			c.Head.face.Transparency = 1  -- Ocultar cara
+		end
+	end)
+	
 	char.HumanoidRootPart.Anchored = false
 	for i,v in pairs(c:GetChildren()) do
 		if v:IsA("Accessory") and v.Name == "Pants" then
@@ -902,6 +920,15 @@ local function redo2()
 			end)
 			local antisleep=Vector3.new(0.005*sin(sine()*8),0.0045*sin(sine()*6),0.005*cos(sine()*7))
 			workspace.FallenPartsDestroyHeight = oldh
+			
+			-- ✅ FIX: Posicionar cabeza real sobre el fake character para que el chat aparezca ahí
+			pcall(function()
+				if c and c:FindFirstChild("Head") and char and char:FindFirstChild("Head") then
+					-- Posicionar cabeza real ligeramente arriba del fake head
+					c.Head.CFrame = char.Head.CFrame * CFrame.new(0, 0.5, 0)
+				end
+			end)
+			
 			if c:FindFirstChild("Tor") then
 				c["Tor"].Handle.CFrame = char["Torso"].CFrame   + antisleep
 			end
@@ -1013,6 +1040,14 @@ local function redo2()
 			end)
 			local antisleep=Vector3.new(0.005*sin(sine()*10),0.005*sin(sine()*9),0.005*math.cos(sine()*7))
 			workspace.FallenPartsDestroyHeight = oldh
+			
+			-- ✅ FIX: Posicionar cabeza real sobre el fake character (custom mode)
+			pcall(function()
+				if c and c:FindFirstChild("Head") and char and char:FindFirstChild("Head") then
+					c.Head.CFrame = char.Head.CFrame * CFrame.new(0, 0.5, 0)
+				end
+			end)
+			
 			if c:FindFirstChild("Tor") then
 				if char["Torso"]:FindFirstChildOfClass("SpecialMesh") then 
 					c["Tor"].Handle.CFrame = char["Torso"].CFrame  * OxideSettings.CH.Torso.Orientation  +antisleep+ char["Torso"]:FindFirstChildOfClass("SpecialMesh").Offset
