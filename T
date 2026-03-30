@@ -40,7 +40,6 @@ if OxideSettings.Scale == nil then
 end
 if OxideSettings.CH.Head == nil then 
 	OxideSettings.CH.Head = {}
-end
 if OxideSettings.CH.Head.Name == nil then 
 	OxideSettings.CH.Head.Name = "wtfgangimgonnakms!"
 end
