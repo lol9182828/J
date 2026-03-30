@@ -268,7 +268,7 @@ end)
 		end
 	end
 	char.Parent = workspace
-	c.Parent = char
+	c.Parent = workspace
 	for i,v in pairs(OxideSettings.ClientHats) do 
 		local hat = game:GetService("InsertService"):LoadLocalAsset("rbxassetid://"..v)
 		hat.Parent = char
@@ -520,7 +520,7 @@ local function redo2()
 	end
 
 	char.Parent = workspace
-	c.Parent = char
+	c.Parent = workspace
 	OxideSettings.Flinging = false
 	local swordbigvel = false
 	function getRoot(char)
@@ -538,7 +538,7 @@ local function redo2()
 	for i,v in pairs(c:GetChildren()) do
 		if v:IsA("BasePart") then
 			v.AssemblyAngularVelocity = Vector3.new(0,0,0)
-			v.AssemblyLinearVelocity = Vector3.new(0,-9e9,9e9)
+			v.AssemblyLinearVelocity = Vector3.zero
 		end
 	end
 	speaker = game:GetService("Players").LocalPlayer
@@ -546,7 +546,7 @@ local function redo2()
 		if child:IsA("Part") then
 			child.Anchored = false
 		elseif child:IsA("Accessory") then
-			child.Handle.Anchored = true
+			child.Handle.Anchored = false  -- sin anclar para que animaciones repliquen
 		end
 	end
 	for _, v in pairs(char:GetChildren()) do
@@ -774,7 +774,13 @@ local function redo2()
 			local _s = math.sin(_t*1000)
 			local _c2 = math.cos(_t*1000)
 			for i,v in pairs(c:GetChildren()) do
-				if v:IsA("Accessory") or v:IsA("Tool") then
+				if v:IsA("Accessory") then
+					-- Sin velocity en accesorios: el connect loop los mueve con CFrame cada frame
+					-- Poner velocity 0 evita que la física los jale mientras no están anclados
+					v.Handle.AssemblyLinearVelocity = Vector3.zero
+					v.Handle.AssemblyAngularVelocity = Vector3.zero
+					v.Handle.CanCollide = false
+				elseif v:IsA("Tool") then
 					v.Handle.AssemblyLinearVelocity = Vector3.new(_tv.X*15 - 10*_c2, 28.5312 + _s, _tv.Z*15 + 3*math.sin(_t*12000))
 					v.Handle.AssemblyAngularVelocity = Vector3.new(0, math.sin(_t*10), 0) + _ta * 2
 					v.Handle.CanCollide = false
@@ -784,9 +790,9 @@ local function redo2()
 	else 
 		velocity = game:GetService("RunService").Heartbeat:Connect(function()
 			for i,v in pairs(c:GetChildren()) do
-				if v:IsA("Accessory")  then
-					v.Handle.AssemblyLinearVelocity = Vector3.new(char.Torso.AssemblyLinearVelocity.X*15 -10*math.clamp(math.sin(os.clock()*1000),0.5,1)   ,30.499+math.sin(os.clock()*10000), char.Torso.AssemblyLinearVelocity.Z*15 +6) 
-					v.Handle.AssemblyAngularVelocity = char.Torso.AssemblyAngularVelocity * 10
+				if v:IsA("Accessory") then
+					v.Handle.AssemblyLinearVelocity = Vector3.zero
+					v.Handle.AssemblyAngularVelocity = Vector3.zero
 				elseif v:IsA("Tool") then 
 					if burgermeat == true then
 						pcall(function()
