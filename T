@@ -75,17 +75,11 @@ end
 local curcamcf
 local function respawnfunc()
 	curcamcf = workspace.CurrentCamera.CFrame
-	-- ELIMINADO: replicatesignal(game:GetService("Players").LocalPlayer.ConnectDiedSignalBackend)
-	task.wait(0.05) -- RESPAWN INSTANTÁNEO
-	pcall(function() if connect then connect:Disconnect(); connect = nil end end)
-	pcall(function() if velocity then velocity:Disconnect(); velocity = nil end end)
-	pcall(function() if removedl then removedl:Disconnect(); removedl = nil end end)
+	task.wait(0.05)
+	connect:Disconnect()
+	velocity:Disconnect()
+	removedl:Disconnect()
 	transparent()
-	-- Reiniciar reanimate después de desconectar
-	task.spawn(function()
-		task.wait(0.1)
-		pcall(function() redo2() end)
-	end)
 end
 local flingpos = game:GetService("Players").LocalPlayer:GetMouse().Hit
 local flingpart = game:GetService("Players").LocalPlayer:GetMouse().Target
@@ -259,7 +253,11 @@ char.PrimaryPart = char['HumanoidRootPart']
 	if not workspace:FindFirstChild("non") then
 		char:SetPrimaryPartCFrame(c.HumanoidRootPart.CFrame *CFrame.new(0,0,2))
 	end
-	-- ELIMINADO: c["Body Colors"]:Clone().Parent = char
+	pcall(function()
+    if c:FindFirstChild("Body Colors") then
+        c["Body Colors"]:Clone().Parent = char
+    end
+end)
 	game:GetService("Players").LocalPlayer.Character.PrimaryPart = c.Head
 	char.HumanoidRootPart.Anchored = false
 	for i,v in pairs(c:GetChildren()) do
@@ -287,7 +285,7 @@ char.PrimaryPart = char['HumanoidRootPart']
 		elseif string.find(a.Name,"Right") then
 			if string.find(a.Name,"Shoulder") then
 				w.Part1 = char["Right Arm"]
-				w.C1 =  char["Right Arm"].RightShoulderAttachment.CFrame
+				w.C1 =  char["Right Arm"].RightShoulderAttachment.CFrame;
 			end
 		elseif string.find(a.Name,"Left") then
 			if string.find(a.Name,"Foot") then
@@ -330,7 +328,7 @@ char.PrimaryPart = char['HumanoidRootPart']
 		end
 	end
 	task.spawn(function()
-		wait(0.05) -- RESPAWN INSTANTÁNEO
+		task.wait(0.05)
 		if OxideSettings.ReanimatedAnimations == true then
 			pcall(function()
 				c.Animate.Disabled = true
@@ -356,7 +354,7 @@ char.PrimaryPart = char['HumanoidRootPart']
 	end)
 end
 local function redo2()
-	wait(0.05) -- RESPAWN INSTANTÁNEO
+	wait(.001)
 	local gay = true -- dont edit >:(
 	hmode = nil
 	if gay == true then
@@ -662,24 +660,28 @@ local function redo2()
 			v.Handle:BreakJoints()
 		end
 	end 
-	-- Hat char (fake rig): todo invisible
-	for _, child in pairs(char:GetChildren()) do
-		if child:IsA("BasePart") then
-			child.Transparency = 1
-		elseif child:IsA("Accessory") then
-			child.Handle.Transparency = 1
+	if OxideSettings.Legacy == false then 
+		for _, child in pairs(char:GetChildren()) do
+			if child:IsA("BasePart") then
+				child.Transparency = 1
+			elseif child:IsA("Accessory") then
+				child.Handle.Transparency = 1
+			end
+		end
+	else	
+		for _, child in pairs(char:GetChildren()) do
+			if child:IsA("BasePart") and child.Name ~= "HumanoidRootPart" and child.Name ~= "Head" then
+				child.Transparency = 0
+			elseif child:IsA("Accessory") then
+				child.Handle.Transparency = 0
+			end
+		end
+		for _, child in pairs(c:GetDescendants()) do
+			if child:IsA("BasePart") and child.Name ~= "HumanoidRootPart" then
+				child.Transparency = 1
+			end
 		end
 	end
-	-- Personaje real: visible (no ocultar)
-	for _, child in pairs(c:GetChildren()) do
-		if child:IsA("BasePart") and child.Name ~= "HumanoidRootPart" then
-			child.Transparency = 0
-		elseif child:IsA("Accessory") then
-			pcall(function() child.Handle.Transparency = 0 end)
-		end
-	end
-	-- HRP del real: invisible para que no se vea flotando
-	pcall(function() c.HumanoidRootPart.Transparency = 1 end)
 	for i,v in tools do
 		table.remove(tools,table.find(tools,v))
 	end
@@ -727,6 +729,14 @@ local function redo2()
 			v.Parent = lp.Backpack
 		end
 		c:BreakJoints()
+		if exploit ~= "CaetSploit" then
+			replicatesignal(c:FindFirstChildOfClass("Humanoid").ServerBreakJoints)
+		else
+			replicatesignal2(c:FindFirstChildOfClass("Humanoid"),"ServerBreakJoints")
+		end
+		for i,v in tools do
+			v.Parent = c
+		end
 	end)
 	local curcamcf = workspace.CurrentCamera.CFrame
 	task.spawn(function()	
@@ -786,7 +796,7 @@ local function redo2()
 		workspace.non["SpringPixie_150381051_LC"].Handle.AccessoryWeld.C0  = workspace.non["SpringPixie_150381051_LC"].Handle.AccessoryWeld.C0* CFrame.Angles(math.rad(180),0,0)
 	end)
 
-	--wait(game:GetService("Players").RespawnTime + 0.25)  
+	--task.wait(0.05)  
 	local removinghealth = false
 	local sin = math.sin
 	local plrs = game:GetService("Players")
@@ -815,10 +825,6 @@ local function redo2()
 			pcall(function()
 				workspace.CurrentCamera.CameraSubject = char:FindFirstChildOfClass("Humanoid")
 				workspace.FallenPartsDestroyHeight = oldh 
-			end)
-			-- Cabeza real sigue al hat char
-			pcall(function()
-				c.Head.CFrame = char.Head.CFrame
 			end)
 			if c:FindFirstChild("Tor") then
 				c["Tor"].Handle.CFrame = char["Torso"].CFrame   + antisleep
@@ -923,10 +929,6 @@ local function redo2()
 			pcall(function()
 				workspace.CurrentCamera.CameraSubject = char:FindFirstChildOfClass("Humanoid")
 				workspace.FallenPartsDestroyHeight = oldh 
-			end)
-			-- Cabeza real sigue al hat char
-			pcall(function()
-				c.Head.CFrame = char.Head.CFrame
 			end)
 			if c:FindFirstChild("Tor") then
 				if char["Torso"]:FindFirstChildOfClass("SpecialMesh") then 
@@ -1048,8 +1050,7 @@ local function redo2()
 				v.Handle:ApplyImpulse(v.Handle.CFrame.LookVector * 5)
 			end 
 		end
-		-- ELIMINADO: replicatesignal(game:GetService("Players").LocalPlayer.ConnectDiedSignalBackend)
-		task.wait(0.05) -- RESPAWN INSTANTÁNEO
+		task.wait(0.05)
 		connect:Disconnect()
 		char:Destroy()
 		velocity:Disconnect()
@@ -1082,15 +1083,14 @@ local function redo2()
 	char.HumanoidRootPart.Velocity = Vector3.zero 
 end
 redo()
--- ELIMINADO: replicatesignal(game:GetService("Players").LocalPlayer.ConnectDiedSignalBackend)
-task.wait(0.05) -- RESPAWN INSTANTÁNEO
+task.wait(0.05)
 plr.Character:WaitForChild("HumanoidRootPart").CFrame =CFrame.new( workspace.non.HumanoidRootPart.CFrame.X + 2 , workspace.FallenPartsDestroyHeight + 300, workspace.non.HumanoidRootPart.CFrame.Z  ) 
 task.wait(.05)
 redo2()
 game:GetService("StarterGui"):SetCore("SendNotification", {
 	Title = "Oxide Reanimation V3.7  - Respawn Time";
 	Duration = 20;
-	Text = "Refit will take roughly "..(0.1).." seconds."
+	Text = "Refit will take roughly 0.1 seconds."
 })
 local sin=math.sin
 local oldh = workspace.FallenPartsDestroyHeight
@@ -1117,12 +1117,6 @@ char:FindFirstChild("Left Leg").Touched:Connect(function(p)
 end)
 respawnloop = plr.CharacterAdded:Connect(function(re)
 	if re ~= char then
-		-- Desconectar conexiones anteriores para evitar acumulación al respawnear
-		pcall(function() if connect then connect:Disconnect(); connect = nil end end)
-		pcall(function() if velocity then velocity:Disconnect(); velocity = nil end end)
-		pcall(function() if removedl then removedl:Disconnect(); removedl = nil end end)
-		pcall(function() if moveloop then moveloop:Disconnect(); moveloop = nil end end)
-
 		if OxideSettings.HatCollide == false then 
 			repeat wait() until re:FindFirstChildOfClass("Humanoid")
 			moveloop = game:GetService("RunService").Heartbeat:Connect(function()
@@ -1133,8 +1127,7 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 		pcall(function()
 			workspace.CurrentCamera.CFrame = curcamcf
 		end)
-		-- ELIMINADO: replicatesignal(game:GetService("Players").LocalPlayer.ConnectDiedSignalBackend)
-		task.wait(0.05) -- RESPAWN INSTANTÁNEO
+		task.wait(0.05)
 		if  OxideSettings.ToolFling == true then 
 			OxideSettings.Fling = false 
 		end
@@ -1249,7 +1242,7 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 				end
 				workspace.CurrentCamera.CameraSubject = workspace.non:FindFirstChild("Humanoid")
 				redo2()
-				task.wait(0.05) -- RESPAWN INSTANTÁNEO
+				task.wait(0.05)
 				if lp.Character ~= workspace.non then 
 					moveloop:Disconnect()
 					lp.Character:BreakJoints()
