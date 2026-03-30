@@ -11,7 +11,7 @@ CustomHats = false, -- Enable or disable custom rig feature (basically old oxide
 CH = {},
 }]]
 --[[ 
-Oxide V3.7 
+Oxide V4
 Anything below should NOT be changed
 ]]
 if OxideSettings == nil then
@@ -104,9 +104,9 @@ OxideSettings.R6Mode = false
 OxideSettings.MiztCompat = true
 OxideSettings.Fling = false
 game:GetService("StarterGui"):SetCore("SendNotification", {
-	Title = "Oxide Reanimation V3.7 ";
+	Title = "Oxide Reanimation v4 ";
 	Duration = 20;
-	Text = "This script was made by Hemi"
+	Text = "This script was modified by trickyymn"
 })
 local function cfAdd(a,b) return a+b end
 local Hat = {
@@ -685,7 +685,6 @@ local function redo2()
 		end
 	end
 	table.clear(tools)
-	-- Limpia faketools anteriores para evitar acumulación entre respawns
 	for i = #faketools, 1, -1 do
 		local ft = faketools[i]
 		if ft and ft.Parent then
@@ -737,10 +736,7 @@ local function redo2()
 			v.Parent = lp.Backpack
 		end
 		c:BreakJoints()
-		-- replicatesignal removido: causaba equip masivo de tools al respawnear
 	end)
-	-- NO redefinir curcamcf localmente: usamos la global de respawnfunc
-	-- Si no hay curcamcf guardada (primer redo2), guardamos la actual
 	if curcamcf == nil then
 		curcamcf = workspace.CurrentCamera.CFrame
 	end
@@ -1107,7 +1103,7 @@ plr.Character:WaitForChild("HumanoidRootPart").CFrame =CFrame.new( workspace.non
 task.wait(.05)
 redo2()
 game:GetService("StarterGui"):SetCore("SendNotification", {
-	Title = "Oxide Reanimation V3.7  - Respawn Time";
+	Title = "Oxide Reanimation V4  - Respawn Time";
 	Duration = 20;
 	Text = "Refit will take roughly 0.1 seconds."
 })
@@ -1236,7 +1232,7 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 								n=n+.05
 							until  flingpart.AssemblyLinearVelocity.X <= 3500 and n >= .5 or n >= 1
 							game:GetService("StarterGui"):SetCore("SendNotification", {
-								Title = "Oxide Reanimation V3.7  - Fling:";
+								Title = "Oxide Reanimation V4  - Fling:";
 								Duration = 5;
 								Text = "Successfully flung: "..OxideSettings.flingplr.." in: "..n.." seconds!"
 							})
@@ -1278,28 +1274,26 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 					end
 				end
 				if OxideSettings.HatCollide == false then
-					task.wait(.005)
+					task.wait(0)
 				else 
-					task.wait(.0025)
+					task.wait(0)
 				end
 				workspace.CurrentCamera.CameraSubject = workspace.non:FindFirstChild("Humanoid")
 				redo2()
-				task.wait(0.05)
+				task.wait(0)
 				if lp.Character ~= workspace.non then 
 					moveloop:Disconnect()
 					lp.Character:BreakJoints()
 					task.wait(0)
 					lp.Character = workspace.non
 				end
-				-- Forzar cámara al hat char después de asignar Character
 				task.spawn(function()
 					for _ = 1, 10 do
-						task.wait(0.05)
+						task.wait(0)
 						pcall(function()
 							workspace.CurrentCamera.CameraSubject = workspace.non:FindFirstChildOfClass("Humanoid")
 						end)
 					end
-					-- Descongelar cámara una vez que todo está listo
 					workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
 				end)
 			end
@@ -1318,7 +1312,7 @@ getgenv().attackuno= function(part)
 					OxideSettings.flingpart = flingpart
 					OxideSettings.flingplr = tostring(flingpart.Parent:FindFirstChildOfClass("Humanoid").DisplayName.." (@"..flingpart.Parent.Name..")")
 					game:GetService("StarterGui"):SetCore("SendNotification", {
-						Title = "Oxide Reanimation V3.7  - Fling:";
+						Title = "Oxide Reanimation V4  - Fling:";
 						Duration = 3;
 						Text = "Locked onto player: "..flingpart.Parent:FindFirstChildOfClass("Humanoid").DisplayName.." (@"..flingpart.Parent.Name..")"
 					})
@@ -1341,7 +1335,7 @@ getgenv().attackuno= function(part)
 						OxideSettings.flingpart = flingpart:FindFirstChild("HumanoidRootPart")
 						OxideSettings.flingplr = tostring(flingpart:FindFirstChildOfClass("Humanoid").DisplayName.." (@"..flingpart.Name..")")
 						game:GetService("StarterGui"):SetCore("SendNotification", {
-							Title = "Oxide Reanimation V3.7  - Fling:";
+							Title = "Oxide Reanimation V4  - Fling:";
 							Duration = 3;
 							Text = "Locked onto player: "..flingpart:FindFirstChildOfClass("Humanoid").DisplayName.." (@"..flingpart.Name..")"
 						})
@@ -1424,25 +1418,22 @@ uis.InputBegan:Connect(function(k,chatting)
 		pcall(function() _camRenderLock:Disconnect() end)
 		pcall(function() if getgenv().antifling then getgenv().antifling:Disconnect() end end)
 		pcall(function() if getgenv().noclip then getgenv().noclip:Disconnect() end end)
-		-- Restaurar personaje real
 		pcall(function()
 			workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
 			workspace.CurrentCamera.CameraSubject = plr.Character:FindFirstChildOfClass("Humanoid")
 		end)
-		-- Destruir el hat char (non)
 		pcall(function()
 			if workspace:FindFirstChild("non") then
 				workspace.non:Destroy()
 			end
 		end)
-		-- Restaurar personaje real como Character
 		pcall(function()
 			if workspace:FindFirstChild(plr.Name) then
 				plr.Character = workspace[plr.Name]
 			end
 		end)
 		game:GetService("StarterGui"):SetCore("SendNotification", {
-			Title = "Oxide Reanimation V3.7";
+			Title = "Oxide Reanimation V4";
 			Duration = 5;
 			Text = "Reanimate Ended"
 		})
@@ -1451,21 +1442,14 @@ end)
 OxideFakeChar:ScaleTo(OxideSettings.Scale)
 OxideRealChar:ScaleTo(1)
 
--- ── CAMERA LOCK DEFINITIVO ──────────────────────────────────────
--- Mantiene CameraSubject al hat char Y bloquea el CFrame en respawn
--- usando CameraType = Scriptable para que Roblox no lo mueva solo
-
 local _camRenderLock = game:GetService("RunService").RenderStepped:Connect(function()
 	pcall(function()
 		local cam = workspace.CurrentCamera
 		if workspace:FindFirstChild("non") then
 			local nonHum = workspace.non:FindFirstChildOfClass("Humanoid")
-			-- Forzar CameraSubject siempre al hat char
 			if nonHum and cam.CameraSubject ~= nonHum then
 				cam.CameraSubject = nonHum
 			end
-			-- NO tocar CameraType aquí: lo maneja el respawnloop
-			-- Solo si está en un tipo inesperado (no Custom ni Scriptable), resetear
 			if cam.CameraType ~= Enum.CameraType.Custom and cam.CameraType ~= Enum.CameraType.Scriptable then
 				cam.CameraType = Enum.CameraType.Custom
 			end
