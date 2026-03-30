@@ -330,7 +330,7 @@ end)
 		end
 	end
 	task.spawn(function()
-		task.wait()
+		task.wait(0.05)
 		if OxideSettings.ReanimatedAnimations == true then
 			pcall(function()
 				c.Animate.Disabled = true
@@ -752,15 +752,14 @@ local function redo2()
 		pcall(function()
 			moveloop:Disconnect()
 		end)
-		task.wait(.01)
-		-- Restaurar cámara al subject del hat char, no al personaje real
-		workspace.CurrentCamera.CameraSubject = char:FindFirstChildOfClass("Humanoid") or workspace.CurrentCamera.CameraSubject
-		-- Usar Scriptable temporalmente para que el CFrame no sea sobreescrito
-		local _prevType = workspace.CurrentCamera.CameraType
-		workspace.CurrentCamera.CameraType = Enum.CameraType.Scriptable
-		workspace.CurrentCamera.CFrame = _savedCam
 		task.wait(0)
-		workspace.CurrentCamera.CameraType = _prevType
+		-- Restaurar cámara: primero Scriptable para fijar el CFrame, luego Custom
+		local cam = workspace.CurrentCamera
+		cam.CameraSubject = char:FindFirstChildOfClass("Humanoid") or cam.CameraSubject
+		cam.CameraType = Enum.CameraType.Scriptable
+		cam.CFrame = _savedCam
+		task.wait(0)
+		cam.CameraType = Enum.CameraType.Custom
 		-- Limpiar para el próximo respawn
 		curcamcf = nil
 		curcamsubject = nil
@@ -818,7 +817,7 @@ local function redo2()
 		workspace.non["SpringPixie_150381051_LC"].Handle.AccessoryWeld.C0  = workspace.non["SpringPixie_150381051_LC"].Handle.AccessoryWeld.C0* CFrame.Angles(math.rad(180),0,0)
 	end)
 
-	--task.wait()  
+	--task.wait(0.05)  
 	local removinghealth = false
 	local sin = math.sin
 	local plrs = game:GetService("Players")
@@ -1070,7 +1069,7 @@ local function redo2()
 				v.Handle:ApplyImpulse(v.Handle.CFrame.LookVector * 5)
 			end 
 		end
-		task.wait()
+		task.wait(0.05)
 		connect:Disconnect()
 		char:Destroy()
 		velocity:Disconnect()
@@ -1103,7 +1102,7 @@ local function redo2()
 	char.HumanoidRootPart.Velocity = Vector3.zero 
 end
 redo()
-task.wait()
+task.wait(0.05)
 plr.Character:WaitForChild("HumanoidRootPart").CFrame =CFrame.new( workspace.non.HumanoidRootPart.CFrame.X + 2 , workspace.FallenPartsDestroyHeight + 300, workspace.non.HumanoidRootPart.CFrame.Z  ) 
 task.wait(.05)
 redo2()
@@ -1145,7 +1144,7 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 		-- Esperar a que el personaje esté completamente listo antes de continuar
 		repeat task.wait(0) until re:FindFirstChild("HumanoidRootPart") and re:FindFirstChildOfClass("Humanoid")
 		if OxideSettings.HatCollide == false then 
-			 re:FindFirstChildOfClass("Humanoid")
+			repeat wait() until re:FindFirstChildOfClass("Humanoid")
 			moveloop = game:GetService("RunService").Heartbeat:Connect(function()
 				char:FindFirstChildOfClass("Humanoid"):Move(re:FindFirstChildOfClass("Humanoid").MoveDirection)   
 			end)
@@ -1153,18 +1152,18 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 		task.wait(0)
 		pcall(function()
 			if curcamcf then
-				local _pt = workspace.CurrentCamera.CameraType
-				workspace.CurrentCamera.CameraType = Enum.CameraType.Scriptable
-				workspace.CurrentCamera.CFrame = curcamcf
+				local cam = workspace.CurrentCamera
+				cam.CameraType = Enum.CameraType.Scriptable
+				cam.CFrame = curcamcf
 				task.wait(0)
-				workspace.CurrentCamera.CameraType = _pt
+				cam.CameraType = Enum.CameraType.Custom
 			end
 		end)
 		-- Forzar CameraSubject al hat char en loop corto para evitar que
 		-- Roblox lo devuelva al personaje real durante el respawn
 		task.spawn(function()
 			for _ = 1, 20 do
-				task.wait()
+				task.wait(0.05)
 				if workspace:FindFirstChild("non") then
 					local nonHum = workspace.non:FindFirstChildOfClass("Humanoid")
 					if nonHum then
@@ -1173,7 +1172,7 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 				end
 			end
 		end)
-		task.wait()
+		task.wait(0.05)
 		if  OxideSettings.ToolFling == true then 
 			OxideSettings.Fling = false 
 		end
@@ -1185,7 +1184,7 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 		if OxideSettings.HatCollide == false then
 			repeat task.wait(0) until plr.Character:FindFirstChild("Head")
 			workspace.CurrentCamera.CameraSubject = workspace.non:FindFirstChild("Humanoid")
-			task.wait(0) -- era  Accessory, muy lento
+			task.wait(0.05) -- era repeat wait() until Accessory, muy lento
 		end
 		if OxideSettings.HideCharacter == false then
 			if plr.Character.Name ~= "non" then
@@ -1196,7 +1195,7 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 					end
 					task.wait(.005)
 					redo2()
-					task.wait()
+					task.wait(0.05)
 					pcall(function() workspace.CurrentCamera.CameraSubject = workspace.non:FindFirstChildOfClass("Humanoid") end)
 				else
 					workspace.CurrentCamera.CameraSubject = workspace.Terrain.non:FindFirstChildOfClass("Humanoid")
@@ -1205,7 +1204,7 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 					end
 					task.wait(.005)
 					redo2()
-					task.wait()
+					task.wait(0.05)
 					pcall(function() workspace.CurrentCamera.CameraSubject = workspace.Terrain.non:FindFirstChildOfClass("Humanoid") end)
 				end
 			end
@@ -1299,7 +1298,7 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 				end
 				workspace.CurrentCamera.CameraSubject = workspace.non:FindFirstChild("Humanoid")
 				redo2()
-				task.wait()
+				task.wait(0.05)
 				if lp.Character ~= workspace.non then 
 					moveloop:Disconnect()
 					lp.Character:BreakJoints()
@@ -1309,7 +1308,7 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 				-- Forzar cámara al hat char después de asignar Character
 				task.spawn(function()
 					for _ = 1, 10 do
-						task.wait(0)
+						task.wait(0.05)
 						pcall(function()
 							workspace.CurrentCamera.CameraSubject = workspace.non:FindFirstChildOfClass("Humanoid")
 						end)
@@ -1428,23 +1427,61 @@ local uis = game:GetService("UserInputService")
 uis.InputBegan:Connect(function(k,chatting)
 	if chatting then return end
 	if k.KeyCode == Enum.KeyCode.Minus then 
-		respawnfunc()
+		-- Reset manual: destruir todo y notificar
+		pcall(function() connect:Disconnect() end)
+		pcall(function() velocity:Disconnect() end)
+		pcall(function() removedl:Disconnect() end)
+		pcall(function() moveloop:Disconnect() end)
+		pcall(function() respawnloop:Disconnect() end)
+		pcall(function() _camRenderLock:Disconnect() end)
+		pcall(function() if getgenv().antifling then getgenv().antifling:Disconnect() end end)
+		pcall(function() if getgenv().noclip then getgenv().noclip:Disconnect() end end)
+		-- Restaurar personaje real
+		pcall(function()
+			workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+			workspace.CurrentCamera.CameraSubject = plr.Character:FindFirstChildOfClass("Humanoid")
+		end)
+		-- Destruir el hat char (non)
+		pcall(function()
+			if workspace:FindFirstChild("non") then
+				workspace.non:Destroy()
+			end
+		end)
+		-- Restaurar personaje real como Character
+		pcall(function()
+			if workspace:FindFirstChild(plr.Name) then
+				plr.Character = workspace[plr.Name]
+			end
+		end)
+		game:GetService("StarterGui"):SetCore("SendNotification", {
+			Title = "Oxide Reanimation V3.7";
+			Duration = 5;
+			Text = "Reanimate Ended"
+		})
 	end
 end) 
 OxideFakeChar:ScaleTo(OxideSettings.Scale)
 OxideRealChar:ScaleTo(1)
 
--- ── CAMERA LOCK: fuerza CameraSubject al hat char SIEMPRE ──────
--- Esto evita que Roblox devuelva la cámara al personaje real en cualquier momento
-local _camLock = game:GetService("RunService").RenderStepped:Connect(function()
+-- ── CAMERA LOCK DEFINITIVO ──────────────────────────────────────
+-- Mantiene CameraSubject al hat char Y bloquea el CFrame en respawn
+-- usando CameraType = Scriptable para que Roblox no lo mueva solo
+
+local _camRenderLock = game:GetService("RunService").RenderStepped:Connect(function()
 	pcall(function()
+		local cam = workspace.CurrentCamera
 		if workspace:FindFirstChild("non") then
 			local nonHum = workspace.non:FindFirstChildOfClass("Humanoid")
-			if nonHum and workspace.CurrentCamera.CameraSubject ~= nonHum then
-				workspace.CurrentCamera.CameraSubject = nonHum
+			-- Forzar CameraSubject siempre
+			if nonHum and cam.CameraSubject ~= nonHum then
+				cam.CameraSubject = nonHum
+			end
+			-- Forzar CameraType a Custom si no está en Scriptable
+			-- (Custom sigue al CameraSubject correctamente)
+			if cam.CameraType ~= Enum.CameraType.Custom then
+				cam.CameraType = Enum.CameraType.Custom
 			end
 		end
 	end)
 end)
--- Guardar referencia global para poder desconectarlo si es necesario
-getgenv().OxideCamLock = _camLock
+getgenv().OxideCamLock = _camRenderLock
