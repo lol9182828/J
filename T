@@ -75,7 +75,6 @@ end
 local curcamcf
 local function respawnfunc()
 	curcamcf = workspace.CurrentCamera.CFrame
-	replicatesignal(game:GetService("Players").LocalPlayer.ConnectDiedSignalBackend)
 	task.wait(game:GetService("Players").RespawnTime)
 	connect:Disconnect()
 	velocity:Disconnect()
@@ -1051,7 +1050,6 @@ local function redo2()
 				v.Handle:ApplyImpulse(v.Handle.CFrame.LookVector * 5)
 			end 
 		end
-		replicatesignal(game:GetService("Players").LocalPlayer.ConnectDiedSignalBackend)
 		task.wait(game:GetService("Players").RespawnTime - qr)
 		connect:Disconnect()
 		char:Destroy()
@@ -1085,7 +1083,6 @@ local function redo2()
 	char.HumanoidRootPart.Velocity = Vector3.zero 
 end
 redo()
-replicatesignal(game:GetService("Players").LocalPlayer.ConnectDiedSignalBackend)
 task.wait(game:GetService("Players").RespawnTime)
 plr.Character:WaitForChild("HumanoidRootPart").CFrame =CFrame.new( workspace.non.HumanoidRootPart.CFrame.X + 2 , workspace.FallenPartsDestroyHeight + 300, workspace.non.HumanoidRootPart.CFrame.Z  ) 
 task.wait(.05)
@@ -1130,7 +1127,6 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 		pcall(function()
 			workspace.CurrentCamera.CFrame = curcamcf
 		end)
-		replicatesignal(game:GetService("Players").LocalPlayer.ConnectDiedSignalBackend)
 		task.wait(game:GetService("Players").RespawnTime)
 		if  OxideSettings.ToolFling == true then 
 			OxideSettings.Fling = false 
