@@ -73,12 +73,14 @@ local function transparent()
 	end
 end
 local curcamcf
+local curcamsubject  -- guardamos el subject actual también
 local function respawnfunc()
 	curcamcf = workspace.CurrentCamera.CFrame
+	curcamsubject = workspace.CurrentCamera.CameraSubject
 	task.wait(0.05)
-	connect:Disconnect()
-	velocity:Disconnect()
-	removedl:Disconnect()
+	pcall(function() connect:Disconnect() end)
+	pcall(function() velocity:Disconnect() end)
+	pcall(function() removedl:Disconnect() end)
 	transparent()
 end
 local flingpos = game:GetService("Players").LocalPlayer:GetMouse().Hit
@@ -737,7 +739,13 @@ local function redo2()
 		c:BreakJoints()
 		-- replicatesignal removido: causaba equip masivo de tools al respawnear
 	end)
-	local curcamcf = workspace.CurrentCamera.CFrame
+	-- NO redefinir curcamcf localmente: usamos la global de respawnfunc
+	-- Si no hay curcamcf guardada (primer redo2), guardamos la actual
+	if curcamcf == nil then
+		curcamcf = workspace.CurrentCamera.CFrame
+	end
+	local _savedCam = curcamcf  -- snapshot para este spawn
+	local _savedSubject = curcamsubject
 	task.spawn(function()	
 		task.wait(.02)
 		game:GetService("Players").LocalPlayer.Character=char 
@@ -745,7 +753,12 @@ local function redo2()
 			moveloop:Disconnect()
 		end)
 		task.wait(.01)
-		workspace.CurrentCamera.CFrame = curcamcf
+		-- Restaurar cámara al subject del hat char, no al personaje real
+		workspace.CurrentCamera.CameraSubject = char:FindFirstChildOfClass("Humanoid") or workspace.CurrentCamera.CameraSubject
+		workspace.CurrentCamera.CFrame = _savedCam
+		-- Limpiar para el próximo respawn
+		curcamcf = nil
+		curcamsubject = nil
 	end)
 	local burgermeat = false 
 	local _oxFrame = 0
@@ -1124,6 +1137,8 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 		pcall(function() if velocity then velocity:Disconnect(); velocity = nil end end)
 		pcall(function() if removedl then removedl:Disconnect(); removedl = nil end end)
 		pcall(function() if moveloop then moveloop:Disconnect(); moveloop = nil end end)
+		-- Esperar a que el personaje esté completamente listo antes de continuar
+		repeat task.wait(0.05) until re:FindFirstChild("HumanoidRootPart") and re:FindFirstChildOfClass("Humanoid")
 		if OxideSettings.HatCollide == false then 
 			repeat wait() until re:FindFirstChildOfClass("Humanoid")
 			moveloop = game:GetService("RunService").Heartbeat:Connect(function()
@@ -1133,6 +1148,19 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 		task.wait(.01)
 		pcall(function()
 			workspace.CurrentCamera.CFrame = curcamcf
+		end)
+		-- Forzar CameraSubject al hat char en loop corto para evitar que
+		-- Roblox lo devuelva al personaje real durante el respawn
+		task.spawn(function()
+			for _ = 1, 20 do
+				task.wait(0.05)
+				if workspace:FindFirstChild("non") then
+					local nonHum = workspace.non:FindFirstChildOfClass("Humanoid")
+					if nonHum then
+						workspace.CurrentCamera.CameraSubject = nonHum
+					end
+				end
+			end
 		end)
 		task.wait(0.05)
 		if  OxideSettings.ToolFling == true then 
@@ -1157,6 +1185,8 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 					end
 					task.wait(.005)
 					redo2()
+					task.wait(0.05)
+					pcall(function() workspace.CurrentCamera.CameraSubject = workspace.non:FindFirstChildOfClass("Humanoid") end)
 				else
 					workspace.CurrentCamera.CameraSubject = workspace.Terrain.non:FindFirstChildOfClass("Humanoid")
 					if plr.Character.Name ~= "non" then
@@ -1164,10 +1194,19 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 					end
 					task.wait(.005)
 					redo2()
+					task.wait(0.05)
+					pcall(function() workspace.CurrentCamera.CameraSubject = workspace.Terrain.non:FindFirstChildOfClass("Humanoid") end)
 				end
 			end
 		else
 			workspace.CurrentCamera.CameraSubject = workspace.non:FindFirstChild("Humanoid")
+			-- Mantener CameraSubject al hat char durante toda la sesión
+			task.spawn(function()
+				task.wait(0.1)
+				if workspace:FindFirstChild("non") then
+					workspace.CurrentCamera.CameraSubject = workspace.non:FindFirstChildOfClass("Humanoid")
+				end
+			end)
 			local flingloop
 			local c = re
 			if OxideSettings.FlingEnabled == true and OxideSettings.ToolFling == false and OxideSettings.HatCollide == false then 
@@ -1256,6 +1295,15 @@ respawnloop = plr.CharacterAdded:Connect(function(re)
 					task.wait(.15)
 					lp.Character = workspace.non
 				end
+				-- Forzar cámara al hat char después de asignar Character
+				task.spawn(function()
+					for _ = 1, 10 do
+						task.wait(0.05)
+						pcall(function()
+							workspace.CurrentCamera.CameraSubject = workspace.non:FindFirstChildOfClass("Humanoid")
+						end)
+					end
+				end)
 			end
 		end
 	end
